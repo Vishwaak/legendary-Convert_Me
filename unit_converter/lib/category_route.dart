@@ -3,9 +3,14 @@ import 'package:unit_converter/unit.dart';
 import 'category.dart';
 final _backgroundColor = Colors.green[100];
 
-
-class CategoryRoute extends StatelessWidget {
+class CategoryRoute extends StatefulWidget {
   const CategoryRoute();
+  @override
+  _CategoryRouteState createState() => _CategoryRouteState();
+
+}
+
+class _CategoryRouteState extends State<CategoryRoute> {
   static const _categoryName = <String> [
     'Length',
     'Area',
