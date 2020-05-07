@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
+
+
 import 'category_route.dart';
 
+/// The function that is called when main.dart is run.
 void main() {
   runApp(UnitConverterApp());
 }
 
+
 class UnitConverterApp extends StatelessWidget {
-  @override 
+  @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Unit _Converter', 
+      title: 'Unit Converter',
       theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: Colors.blueAccent[200],
-        fontFamily: 'Georgia',
-        textTheme:TextTheme(
-          headline: TextStyle(fontSize: 0.72),
-          body1: TextStyle(fontSize: 0.42))
+        textTheme: Theme.of(context).textTheme.apply(
+              bodyColor: Colors.black,
+              displayColor: Colors.grey[600],
+            ),
+        // This colors the [InputOutlineBorder] when it is selected
+        primaryColor: Colors.grey[500],
+        textSelectionHandleColor: Colors.green[500],
       ),
       home: CategoryRoute(),
     );

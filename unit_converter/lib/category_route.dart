@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:unit_converter/unit.dart';
+
+import 'backdrop.dart';
 import 'category.dart';
-final _backgroundColor = Colors.green[100];
+import 'category_tile.dart';
+import 'unit.dart';
+import 'unit_converter.dart';
+
 
 class CategoryRoute extends StatefulWidget {
   const CategoryRoute();
+
   @override
   _CategoryRouteState createState() => _CategoryRouteState();
-
 }
 
 class _CategoryRouteState extends State<CategoryRoute> {
-  static const _categoryName = <String> [
+  Category _defaultCategory;
+  Category _currentCategory;
+
+  final _categories = <Category>[];
+  static const _categoryNames = <String>[
     'Length',
     'Area',
     'Volume',
@@ -19,10 +27,10 @@ class _CategoryRouteState extends State<CategoryRoute> {
     'Time',
     'Digital Storage',
     'Energy',
-    'Currency'
+    'Currency',
   ];
-  static const _baseColors = <Color> [
-     ColorSwatch(0xFF6AB7A8, {
+  static const _baseColors = <ColorSwatch>[
+    ColorSwatch(0xFF6AB7A8, {
       'highlight': Color(0xFF6AB7A8),
       'splash': Color(0xFF0ABC9B),
     }),
@@ -56,12 +64,63 @@ class _CategoryRouteState extends State<CategoryRoute> {
       'error': Color(0xFF912D2D),
     }),
   ];
-  Widget _buidlCategoryWidget(List<Widget> categories) {
-    return ListView.builder(itemBuilder: (BuildContext context, int index) => categories[index],
-    itemCount: categories.length,);
+
+  @override
+  void initState() {
+    super.initState();
+    for (var i = 0; i < _categoryNames.length; i++) {
+      var category = Category(
+        name: _categoryNames[i],
+        color: _baseColors[i],
+        iconLocation: Icons.cake,
+        units: _retrieveUnitList(_categoryNames[i]),
+      );
+      if (i == 0) {
+        _defaultCategory = category;
+      }
+      _categories.add(category);
+    }
   }
-  List<Unit>_retrieveUnitLIst(String categoryName) {
-    return List.generate(10, (int i){
+
+  /// Function to call when a [Category] is tapped.
+  void _onCategoryTap(Category category) {
+    setState(() {
+      _currentCategory = category;
+    });
+  }
+
+  /// Makes the correct number of rows for the list view, based on whether the
+  /// device is portrait or landscape.
+  ///
+  /// For portrait, we use a [ListView]. For landscape, we use a [GridView].
+  Widget _buildCategoryWidgets(Orientation deviceOrientation) {
+    if (deviceOrientation == Orientation.portrait) {
+      return ListView.builder(
+        itemBuilder: (BuildContext context, int index) {
+          return CategoryTile(
+            category: _categories[index],
+            onTap: _onCategoryTap,
+          );
+        },
+        itemCount: _categories.length,
+      );
+    } else {
+      return GridView.count(
+        crossAxisCount: 2,
+        childAspectRatio: 3.0,
+        children: _categories.map((Category c) {
+          return CategoryTile(
+            category: c,
+            onTap: _onCategoryTap,
+          );
+        }).toList(),
+      );
+    }
+  }
+
+  /// Returns a list of mock [Unit]s.
+  List<Unit> _retrieveUnitList(String categoryName) {
+    return List.generate(10, (int i) {
       i += 1;
       return Unit(
         name: '$categoryName Unit $i',
@@ -69,38 +128,30 @@ class _CategoryRouteState extends State<CategoryRoute> {
       );
     });
   }
-  @override
-  Widget build(BuildContext context)
-  {
-    final categories = <Category>[];
-    for(var i=0; i < _categoryName.length; i++){
-      categories.add(Category(
-        name:_categoryName[i],
-        color: _baseColors[i],
-        iconLocation: Icons.cake,
-        units: _retrieveUnitLIst(_categoryName[i]),
-        ));
-    }
-    final listview = Container(
-      color: _backgroundColor,
-      padding: EdgeInsets.symmetric(horizontal:  8.0),
-      child: _buidlCategoryWidget(categories),
-    );
-    final appBar = AppBar(
-      elevation: 0.0,
-      title: Text(
-        'Unit_Conveter',
-        style: TextStyle(
-          color:Colors.black,
-          fontSize: 30.0,
-          ),
-      ),
-      centerTitle: true,
-      backgroundColor: _backgroundColor,
-    );
-    return Scaffold(appBar: appBar,
-    body: listview,);
-  }
 
-  void colors() => Colors;
+  @override
+  Widget build(BuildContext context) {
+    // Based on the device size, figure out how to best lay out the list
+    // You can also use MediaQuery.of(context).size to calculate the orientation
+    assert(debugCheckHasMediaQuery(context));
+    final listView = Padding(
+      padding: EdgeInsets.only(
+        left: 8.0,
+        right: 8.0,
+        bottom: 48.0,
+      ),
+      child: _buildCategoryWidgets(MediaQuery.of(context).orientation),
+    );
+
+    return Backdrop(
+      currentCategory:
+          _currentCategory == null ? _defaultCategory : _currentCategory,
+      frontPanel: _currentCategory == null
+          ? UnitConverter(category: _defaultCategory)
+          : UnitConverter(category: _currentCategory),
+      backPanel: listView,
+      frontTitle: Text('Unit Converter'),
+      backTitle: Text('Select a Category'),
+    );
+  }
 }
